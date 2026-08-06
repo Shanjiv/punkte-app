@@ -1,0 +1,1015 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Punkte">
+<meta name="theme-color" content="#0E1626">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Punkte</title>
+
+<style>
+:root{
+  --ink:#0E1626; --surface:#FFFFFF; --surface-2:#F1F4F9; --line:#DDE3ED;
+  --text:#0E1626; --muted:#5B6B85;
+  --amber:#E08700; --amber-soft:#FFF3DC;
+  --grass:#1F7A45; --grass-soft:#E3F3E9;
+  --page:#F6F8FB;
+  --shadow:0 1px 2px rgba(14,22,38,.07), 0 8px 24px rgba(14,22,38,.06);
+  --r:18px; --r-lg:26px;
+  --display:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;
+  --body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --surface:#17233A; --surface-2:#1E2C46; --line:#2C3D5C;
+    --text:#EDF1F8; --muted:#95A4BF;
+    --amber:#FFB43D; --amber-soft:#38290F;
+    --grass:#4FC17E; --grass-soft:#12301F;
+    --page:#0E1626;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="light"]{
+  --surface:#FFFFFF; --surface-2:#F1F4F9; --line:#DDE3ED; --text:#0E1626; --muted:#5B6B85;
+  --amber:#E08700; --amber-soft:#FFF3DC; --grass:#1F7A45; --grass-soft:#E3F3E9; --page:#F6F8FB;
+  --shadow:0 1px 2px rgba(14,22,38,.07), 0 8px 24px rgba(14,22,38,.06);
+}
+:root[data-theme="dark"]{
+  --surface:#17233A; --surface-2:#1E2C46; --line:#2C3D5C; --text:#EDF1F8; --muted:#95A4BF;
+  --amber:#FFB43D; --amber-soft:#38290F; --grass:#4FC17E; --grass-soft:#12301F; --page:#0E1626;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page); color:var(--text);
+  font-family:var(--body); font-size:17px; line-height:1.45;
+  -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:8px}
+
+.wrap{
+  max-width:640px;margin:0 auto;
+  padding:max(14px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+}
+.screen{display:none}
+.screen.on{display:block;animation:in .22s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.on{animation:none}*{transition:none!important}}
+
+/* ---- Kopfzeile ---- */
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;min-height:44px}
+.back{
+  display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:14px;background:var(--surface);
+  box-shadow:var(--shadow);font-size:20px;flex:0 0 auto
+}
+.bar h1{font-family:var(--display);font-size:23px;font-weight:800;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.bar .sub{font-size:13px;color:var(--muted);margin-top:1px}
+
+/* ---- Start ---- */
+.hero{font-family:var(--display);font-size:30px;font-weight:800;margin:6px 0 4px;letter-spacing:-.02em}
+.hero-sub{color:var(--muted);margin:0 0 22px;font-size:15px}
+.kid-grid{display:grid;gap:14px}
+.kid{
+  display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  background:var(--surface);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow)
+}
+.kid:active{transform:scale(.985)}
+.avatar{
+  width:60px;height:60px;border-radius:20px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:800;font-size:25px;color:#fff;background:var(--grass);
+  /* Bei zweifarbigen Symbolen steht der Buchstabe teils auf der helleren Hälfte — ohne Schatten wäre er dort grenzwertig */
+  text-shadow:0 1px 4px rgba(0,0,0,.55)
+}
+.kid .nm{font-family:var(--display);font-size:22px;font-weight:800}
+.kid .pts{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+
+/* ---- Punktestand ---- */
+.score{
+  background:var(--surface);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);
+  margin-bottom:16px
+}
+.score-top{display:flex;align-items:baseline;gap:10px}
+.score-num{font-family:var(--display);font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.score-lab{color:var(--muted);font-size:15px}
+.score-total{margin-left:auto;font-size:13px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.goal{display:flex;gap:14px;margin-top:18px;align-items:center}
+.goal img{width:72px;height:72px;border-radius:16px;object-fit:cover;background:var(--surface-2);flex:0 0 auto}
+.goal-none{width:72px;height:72px;border-radius:16px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:28px;flex:0 0 auto}
+.goal-body{flex:1;min-width:0}
+.goal-name{font-family:var(--display);font-weight:800;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.goal-meta a{color:var(--amber)}
+.track{height:12px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:9px}
+.fill{height:100%;border-radius:99px;background:var(--amber);transition:width .4s ease}
+.fill.done{background:var(--grass)}
+
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.badge{
+  background:var(--amber-soft);color:var(--amber);border-radius:99px;
+  padding:6px 12px;font-size:13px;font-weight:700;display:inline-flex;gap:6px;align-items:center
+}
+
+/* ---- Bereichskarten ---- */
+.areas{display:grid;gap:12px;margin-bottom:16px}
+.area{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--surface);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)
+}
+.area:active{transform:scale(.985)}
+.area .ico{font-size:30px;width:44px;text-align:center;flex:0 0 auto}
+.area .t{font-family:var(--display);font-weight:800;font-size:19px}
+.area .d{font-size:13px;color:var(--muted)}
+.area .chev{margin-left:auto;color:var(--muted);font-size:22px}
+
+/* ---- Kategoriekarten ---- */
+.cats{display:grid;gap:10px}
+.cat{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);
+  min-height:64px;position:relative;overflow:hidden
+}
+.cat:active{transform:scale(.98)}
+.cat .ico{font-size:26px;width:38px;text-align:center;flex:0 0 auto}
+.cat .tx{flex:1;font-weight:600;font-size:16px;line-height:1.3}
+.cat .pt{
+  font-family:var(--display);font-weight:800;font-size:15px;color:var(--grass);
+  background:var(--grass-soft);border-radius:99px;padding:5px 11px;flex:0 0 auto;font-variant-numeric:tabular-nums
+}
+.cat.hit::after{
+  content:"";position:absolute;inset:0;background:var(--grass);opacity:.16;
+  animation:flash .55s ease forwards;pointer-events:none
+}
+@keyframes flash{from{opacity:.3}to{opacity:0}}
+
+/* ---- Tagesübung ---- */
+.today{background:var(--surface);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.today h3{font-family:var(--display);font-size:18px;font-weight:800;margin:0 0 3px}
+.today p{margin:0 0 14px;font-size:13px;color:var(--muted)}
+.mins{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.min{
+  background:var(--surface-2);border-radius:16px;padding:16px 12px;text-align:center;
+  border:2px solid transparent
+}
+.min:active{transform:scale(.97)}
+.min .n{font-family:var(--display);font-size:23px;font-weight:800;display:block}
+.min .p{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.min[disabled]{opacity:.45}
+.done-note{
+  margin-top:12px;background:var(--grass-soft);color:var(--grass);border-radius:14px;
+  padding:11px 13px;font-size:14px;font-weight:600
+}
+.week{margin-top:12px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ---- Segment ---- */
+.seg-lab{font-size:13px;color:var(--muted);margin:16px 0 7px;font-weight:600}
+.seg{display:flex;gap:6px;background:var(--surface-2);border-radius:14px;padding:5px}
+.seg button{
+  flex:1;padding:11px 8px;border-radius:10px;font-size:14px;font-weight:700;
+  color:var(--muted);text-align:center;min-height:44px
+}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+
+/* ---- Buttons / Listen ---- */
+.row{display:flex;gap:10px;margin-top:16px}
+.btn{
+  flex:1;background:var(--surface);border-radius:16px;padding:15px;text-align:center;
+  font-weight:700;box-shadow:var(--shadow);min-height:52px
+}
+.btn.primary{background:var(--amber);color:#1B1200}
+.btn.ghost{background:transparent;box-shadow:none;border:1.5px solid var(--line);color:var(--muted)}
+.btn:active{transform:scale(.98)}
+
+.card{background:var(--surface);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:12px}
+.card h3{font-family:var(--display);font-size:17px;font-weight:800;margin:0 0 10px}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.note strong{color:var(--text)}
+
+label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:12px 0 5px}
+input[type=text],input[type=url],input[type=number],select{
+  width:100%;padding:13px;border-radius:13px;border:1.5px solid var(--line);
+  background:var(--surface-2);color:var(--text);font:inherit;font-size:16px
+}
+input[type=file]{font-size:14px;width:100%}
+
+.rw{display:flex;gap:13px;align-items:center;background:var(--surface);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);margin-bottom:10px}
+.rw img{width:56px;height:56px;border-radius:14px;object-fit:cover;background:var(--surface-2);flex:0 0 auto}
+.rw .ph{width:56px;height:56px;border-radius:14px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+.rw .b{flex:1;min-width:0}
+.rw .n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rw .m{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{border-radius:99px;padding:9px 14px;font-size:14px;font-weight:700;background:var(--surface-2);flex:0 0 auto;min-height:44px}
+.pill.go{background:var(--grass);color:#fff}
+.pill.sm{padding:7px 11px;font-size:13px;min-height:auto}
+
+.empty{text-align:center;color:var(--muted);padding:34px 16px;font-size:15px}
+.tag{display:inline-block;background:var(--surface-2);border-radius:8px;padding:2px 8px;font-size:12px;color:var(--muted);font-weight:600}
+.hr{height:1px;background:var(--line);margin:18px 0}
+.grad{background:var(--amber-soft);color:var(--amber);border-radius:13px;padding:12px;font-size:14px;font-weight:600;margin-bottom:10px}
+
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));
+  background:var(--ink);color:#fff;border-radius:99px;padding:13px 22px;font-weight:700;font-size:15px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
+  z-index:50;max-width:88vw;text-align:center
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(-4px)}
+@media (prefers-color-scheme:dark){.toast{background:#EDF1F8;color:#0E1626}}
+:root[data-theme="dark"] .toast{background:#EDF1F8;color:#0E1626}
+:root[data-theme="light"] .toast{background:#0E1626;color:#fff}
+
+.kr{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.kr .kico{width:52px;text-align:center;font-size:19px;padding:10px 4px}
+.kr .ktx{flex:1;min-width:0;font-size:15px;padding:10px}
+.kr .kpt{width:62px;text-align:center;padding:10px 4px;font-variant-numeric:tabular-nums}
+.kr input{border-radius:11px}
+.kr.pause .ktx,.kr.pause .kico{opacity:.45}
+/* Kinderverwaltung im Elternbereich */
+.kw{display:flex;gap:13px;align-items:center;background:var(--surface-2);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.kw .b{flex:1;min-width:0}
+.kw .n{font-weight:700}
+.kw .m{font-size:13px;color:var(--muted)}
+.avatar.sm{width:44px;height:44px;border-radius:15px;font-size:19px}
+.farben{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
+.farbe{
+  width:44px;height:44px;border-radius:15px;flex:0 0 auto;
+  box-shadow:var(--shadow);border:3px solid transparent
+}
+.farbe.an{border-color:var(--amber);transform:scale(1.06)}
+
+.kgrp{font-size:13px;color:var(--muted);font-weight:700;margin:16px 0 8px}
+.kgrp:first-child{margin-top:4px}
+
+/* Elternzugang: sichtbar als Knopf, aber nur mit langem Druck zu öffnen —
+   erkennbar für Erwachsene, nicht versehentlich erreichbar für die Kinder. */
+.gate{
+  display:block;width:100%;margin-top:26px;padding:14px;min-height:44px;
+  font-size:14px;color:var(--muted);text-align:center;
+  background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);
+  user-select:none;-webkit-user-select:none;transition:transform .15s ease
+}
+.gate b{color:var(--text);font-weight:700}
+.gate.hold{transform:scale(.97)}
+
+/* Auf dem iPad ist die Spalte sonst schmal und die Seite darunter leer */
+@media (min-width:760px){
+  .wrap{max-width:860px}
+  .kid-grid,.areas,.cats{grid-template-columns:1fr 1fr}
+}
+/* Formulare und Hinweise sollen im zweispaltigen Raster nicht auf halber Breite kleben */
+.voll{grid-column:1/-1}
+</style>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section id="s-start" class="screen on">
+  <p class="hero">Punkte</p>
+  <p class="hero-sub" id="heroSub"></p>
+  <div class="kid-grid" id="kidGrid"></div>
+  <button class="gate" id="gate">⚙️ <b>Für Eltern</b> — Belohnungen, Kategorien, Sicherung<br>hier gedrückt halten, bis es aufgeht</button>
+</section>
+
+<!-- ============ KIND ============ -->
+<section id="s-kid" class="screen">
+  <div class="bar">
+    <button class="back" data-go="s-start" aria-label="Zurück">←</button>
+    <div><h1 id="kidName">—</h1><div class="sub" id="kidAge"></div></div>
+  </div>
+
+  <div class="score">
+    <div class="score-top">
+      <span class="score-num" id="kidPts">0</span>
+      <span class="score-lab">Punkte</span>
+      <span class="score-total" id="kidTotal"></span>
+    </div>
+    <div id="goalBox"></div>
+  </div>
+
+  <div class="areas" id="areaList"></div>
+  <div id="badgeBox"></div>
+
+  <div class="row">
+    <button class="btn" data-go="s-rewards">Belohnungen</button>
+  </div>
+</section>
+
+<!-- ============ BEREICH ============ -->
+<section id="s-area" class="screen">
+  <div class="bar">
+    <button class="back" data-go="s-kid" aria-label="Zurück">←</button>
+    <div><h1 id="areaTitle">—</h1><div class="sub" id="areaSub"></div></div>
+  </div>
+  <div id="areaExtra"></div>
+  <div class="cats" id="catList"></div>
+</section>
+
+<!-- ============ BELOHNUNGEN ============ -->
+<section id="s-rewards" class="screen">
+  <div class="bar">
+    <button class="back" data-go="s-kid" aria-label="Zurück">←</button>
+    <div><h1>Belohnungen</h1><div class="sub" id="rwSub"></div></div>
+  </div>
+  <div id="rwList"></div>
+</section>
+
+<!-- ============ ELTERN ============ -->
+<section id="s-parent" class="screen">
+  <div class="bar">
+    <button class="back" data-go="s-start" aria-label="Zurück">←</button>
+    <div><h1>Eltern</h1><div class="sub">Einstellungen und Belohnungen</div></div>
+  </div>
+  <div id="parentBody"></div>
+</section>
+
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const KEY="punkte_v1";
+const KEY_ALT="kickers_punkte_v1";   // Schlüssel der ersten Fassung, wird einmalig übernommen
+const $=id=>document.getElementById(id);
+const BEREICHE={
+  fussball:{t:"Fußball",ico:"⚽",d:"Was du heute probiert hast"},
+  zuhause:{t:"Zuhause",ico:"🏠",d:"Ordnung und Helfen"},
+  schule:{t:"Schule",ico:"✏️",d:"Üben und Ausprobieren"},
+  essen:{t:"Essen",ico:"🍎",d:"Gut essen und trinken"}
+};
+
+function startKategorien(){
+  const c=(id,bereich,text,ico,punkte,wer)=>({id,bereich,text,ico,punkte,wer,graduiert:false});
+  return [
+    // Fußball — nur Versuche, nie Ergebnisse. Vergabe durch den Vater im Dialogmodus.
+    c("f8","fussball","Nach einem Fehler sofort wieder den Ball gefordert","🔁",4,"vater"),
+    c("f13","fussball","Erster Kontakt explosiv durch die Lücke","💥",4,"vater"),
+    c("f1","fussball","1-gegen-1 angenommen — auch wenn es schiefging","🤺",3,"vater"),
+    c("f2","fussball","Durch eine enge Lücke probiert","🚪",3,"vater"),
+    c("f17","fussball","Erster Kontakt nach vorne nach einem Pass","⤴️",3,"vater"),
+    c("f14","fussball","Den Ball in den freien Raum gepasst","🎯",3,"vater"),
+    c("f3","fussball","Etwas probiert, das ich noch nicht kann","✨",3,"vater"),
+    c("f4","fussball","Einen Trick oder eine Finte probiert","🌀",3,"vater"),
+    c("f11","fussball","Nicht gemeckert und weitergemacht","😌",3,"vater"),
+    c("f18","fussball","Den Ball gejagt","💨",3,"vater"),
+    c("f19","fussball","Ball verloren und direkt weitergemacht","⏭️",3,"vater"),
+    c("f10","fussball","Einen Mitspieler aufgemuntert","🤝",3,"vater"),
+    c("f5","fussball","Über die Schulter oder nach vorne nach freien Räumen geschaut","👀",3,"vater"),
+    c("f15","fussball","Beim Dribbeln den Ball eng am Fuß behalten","🧲",2,"vater"),
+    c("f16","fussball","Beim Schuss auf die Technik geachtet","🥅",2,"vater"),
+    c("f6","fussball","Mit dem schwächeren Fuß gespielt","🦶",2,"vater"),
+    c("f7","fussball","Laut den Ball gefordert","📣",2,"vater"),
+    c("f9","fussball","Ohne Ball in Bewegung geblieben","🏃",2,"vater"),
+    c("f12","fussball","Tasche selbst gepackt oder ausgepackt","🎒",1,"vater"),
+    // Zuhause — Kind hakt selbst ab
+    c("z1","zuhause","Zimmer aufgeräumt","🧹",2,"kind"),
+    c("z2","zuhause","Klamotten ordentlich weggeräumt","👕",2,"kind"),
+    c("z3","zuhause","Schuhe weggeräumt","👟",1,"kind"),
+    c("z4","zuhause","Bett gemacht","🛏️",1,"kind"),
+    c("z5","zuhause","Tisch gedeckt oder abgeräumt","🍽️",2,"kind"),
+    c("z6","zuhause","Wäsche in den Korb","🧺",1,"kind"),
+    c("z7","zuhause","Schulranzen am Abend vorher gepackt","🎒",2,"kind"),
+    c("z8","zuhause","Zähne geputzt ohne Erinnerung","🪥",1,"kind"),
+    c("z9","zuhause","Meinem Bruder geholfen","💛",3,"kind"),
+    c("z10","zuhause","Einen Streit selbst gelöst","🕊️",3,"kind"),
+    c("z11","zuhause","Rechtzeitig ins Bett","🌙",2,"kind"),
+    // Schule — Prozess, nie Noten
+    c("s1","schule","15 Minuten Mathe geübt","🔢",3,"kind"),
+    c("s2","schule","15 Minuten Deutsch geübt","🔤",3,"kind"),
+    c("s3","schule","Gelesen","📖",2,"kind"),
+    c("s4","schule","Hausaufgaben ohne Erinnerung angefangen","⏱️",3,"kind"),
+    c("s5","schule","Etwas Schwieriges nochmal versucht","💪",4,"kind"),
+    c("s6","schule","Jemandem etwas erklärt oder vorgelesen","🗣️",3,"kind"),
+    c("s7","schule","Gemalt oder gebastelt","🎨",2,"kind"),
+    // Essen — Verhalten und Probieren, nie Mengen. Siehe kategorien_vorschlag.md
+    c("e2","essen","Beim Kochen oder Vorbereiten geholfen","👨‍🍳",3,"kind"),
+    c("e3","essen","Obst gegessen","🍎",2,"kind"),
+    c("e4","essen","Gemüse gegessen","🥕",2,"kind"),
+    c("e5","essen","Wasser statt Süßgetränk","💧",2,"kind"),
+    c("e6","essen","Gefrühstückt","🥣",2,"kind"),
+    c("e7","essen","Nach dem Sport etwas gegessen und getrunken","🥤",2,"kind"),
+    c("e8","essen","In Ruhe am Tisch gegessen","🍽️",1,"kind")
+  ];
+}
+/* Farben zur Auswahl für das Anfangssymbol. Die Kinder suchen sich eine aus —
+   deshalb steht die Auswahl im Elternbereich neben Name und Geburtsdatum und
+   nicht in den Einstellungen. */
+const FARBEN=[
+  {id:"schwarz",  t:"Schwarz",      v:"linear-gradient(160deg,#23262B 0%,#101215 100%)"},
+  {id:"pink",     t:"Schwarz-Pink", v:"linear-gradient(135deg,#15171B 0 50%,#E92B8C 50% 100%)"},
+  {id:"gruen",    t:"Grün",         v:"linear-gradient(160deg,#2E9E5B 0%,#166B39 100%)"},
+  {id:"blau",     t:"Blau",         v:"linear-gradient(160deg,#3C79D1 0%,#22467E 100%)"},
+  {id:"rot",      t:"Rot",          v:"linear-gradient(160deg,#E2543F 0%,#9E2C1C 100%)"},
+  {id:"lila",     t:"Lila",         v:"linear-gradient(160deg,#8B5CD6 0%,#54308F 100%)"},
+  {id:"tuerkis",  t:"Türkis",       v:"linear-gradient(160deg,#22A5A5 0%,#116A6A 100%)"},
+  {id:"orange",   t:"Orange",       v:"linear-gradient(160deg,#EE9B24 0%,#A85F09 100%)"}
+];
+function neuesKind(name,geb,farbe){
+  return {name,geb,farbe,punkte:0,gesamt:0,schwelle:50,log:[],belohnungen:[],eingeloest:[],abzeichen:[],ziel:null};
+}
+/* Keine Namen und keine Geburtsdaten im Programmcode. Wer die App benutzt, wird
+   beim ersten Start eingetragen und steht ausschließlich auf dem Gerät. */
+function frisch(){
+  return {v:1,
+    kinder:{},
+    kategorien:startKategorien(),
+    einstellungen:{u10:2,u20:4,wochenziel:5,bal:1,balZiel:7}
+  };
+}
+function neueId(){ return "k"+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36); }
+
+let DB, kind=null, bereich=null, kontext="training", quelle="kind_genannt";
+
+function laden(){
+  try{
+    let r=localStorage.getItem(KEY);
+    if(r===null){ r=localStorage.getItem(KEY_ALT); if(r!==null) localStorage.setItem(KEY,r); }
+    DB=r?JSON.parse(r):frisch();
+  }catch(e){DB=frisch();}
+  if(!DB||!DB.kinder) DB=frisch();
+  nachruesten();
+}
+/* Katalog eines bereits benutzten Geräts auf den aktuellen Stand bringen.
+   Ohne das würde ein Gerät, auf dem die App schon lief, weder Ergänzungen noch
+   geänderte Formulierungen je sehen — der Katalog wird beim ersten Start gespeichert.
+   KAT_VERSION bei jeder Änderung am Standardkatalog erhöhen. */
+const KAT_VERSION=7;
+/* Vom Vater entfernte Standardkategorien. Bereits vergebene Punkte bleiben erhalten —
+   sie hängen am Protokolleintrag, nicht an der Kategorie. */
+const ENTFERNT=["e1"];
+function nachruesten(){
+  if(!Array.isArray(DB.kategorien)) DB.kategorien=[];
+  const standard=startKategorien();
+  const da=new Set(DB.kategorien.map(c=>c.id));
+  let neu=0, aendert=false;
+  standard.forEach(c=>{ if(!da.has(c.id)){ DB.kategorien.push(c); neu++; } });
+  if((DB.katVersion||1)<KAT_VERSION){
+    // Text, Symbol und Punktwert der Standardkategorien angleichen.
+    // Eigene Kategorien und die Graduierung bleiben unangetastet.
+    const m={}; standard.forEach(c=>m[c.id]=c);
+    DB.kategorien.forEach(c=>{ const v=m[c.id]; if(v && !c.eigen){ c.text=v.text; c.ico=v.ico; c.punkte=v.punkte; } });
+    // Reihenfolge des Standardkatalogs übernehmen, eigene Kategorien hinten anhängen
+    const rang={}; standard.forEach((c,i)=>rang[c.id]=i);
+    DB.kategorien.sort((a,b)=>(rang[a.id]??999)-(rang[b.id]??999));
+    const weg=DB.kategorien.length;
+    DB.kategorien=DB.kategorien.filter(c=>!ENTFERNT.includes(c.id));
+    if(DB.kategorien.length!==weg) neu=-1;
+    DB.katVersion=KAT_VERSION;
+    neu=neu||-1;
+  }
+  if(!DB.einstellungen) DB.einstellungen={};
+  // Einzeln nachziehen: ein Gerät mit vorhandenem Stand hat das Objekt bereits,
+  // aber noch nicht die später dazugekommenen Felder.
+  const eStd={u10:2,u20:4,wochenziel:5,bal:1,balZiel:7};
+  Object.keys(eStd).forEach(f=>{
+    if(typeof DB.einstellungen[f]!=="number"){ DB.einstellungen[f]=eStd[f]; aendert=true; }
+  });
+  if(!DB.kinder || typeof DB.kinder!=="object") DB.kinder={};
+  Object.keys(DB.kinder).forEach(i=>{
+    const k=DB.kinder[i];
+    ["log","belohnungen","eingeloest","abzeichen"].forEach(f=>{ if(!Array.isArray(k[f])) k[f]=[]; });
+    if(typeof k.gesamt!=="number") k.gesamt=k.punkte||0;
+    if(typeof k.schwelle!=="number") k.schwelle=50;
+  });
+  if(neu||aendert) sichern();
+  if(neu) setTimeout(()=>toast(neu>0?neu+" neue Kategorien dazugekommen":"Kategorien aktualisiert"),700);
+}
+function sichern(){ try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){toast("Speicher voll — Bild kleiner wählen");} }
+
+function heute(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function kw(dstr){
+  const d=new Date(dstr+"T12:00:00"); const t=new Date(d);
+  t.setDate(t.getDate()+4-(t.getDay()||7));
+  const s=new Date(t.getFullYear(),0,1);
+  return t.getFullYear()+"-KW"+String(Math.ceil(((t-s)/86400000+1)/7)).padStart(2,"0");
+}
+function monate(geb){
+  const b=new Date(geb+"T12:00:00"), n=new Date();
+  let m=(n.getFullYear()-b.getFullYear())*12+(n.getMonth()-b.getMonth());
+  if(n.getDate()<b.getDate()) m--;
+  return m;
+}
+/* In der App ausgeschrieben. Die Kurzform Jahre;Monate bleibt der Datenbank
+   vorbehalten (00_regeln/namenskonventionen.md) — hier wäre sie nur verwirrend. */
+function alterText(geb){
+  if(!geb) return "";
+  const m=monate(geb), j=Math.floor(m/12), r=m%12;
+  if(!isFinite(m)||m<0) return "";
+  if(r===0) return j+" Jahre";
+  return j+" Jahre und "+r+(r===1?" Monat":" Monate");
+}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1900);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function zeige(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on");
+  window.scrollTo(0,0);
+}
+function K(){return DB.kinder[kind];}
+function zielVon(k){ return (k.belohnungen||[]).find(b=>b.id===k.ziel) || (k.belohnungen||[])[0] || null; }
+
+/* ---------- Punkte vergeben. Es gibt keinen Weg, Punkte zu verlieren. ---------- */
+function vergib(katId,punkte,extra){
+  const k=K();
+  const e=Object.assign({id:"e"+Date.now()+Math.floor(performance.now()%1000),kat:katId,bereich,punkte,ts:new Date().toISOString(),tag:heute()},extra||{});
+  k.log.push(e); k.punkte+=punkte; k.gesamt+=punkte;
+  if(e.kontext==="turnier" && !k.abzeichen.some(a=>a.typ==="turnier"&&a.tag===e.tag)){
+    k.abzeichen.push({typ:"turnier",tag:e.tag,text:"Im Turnier trotzdem probiert"});
+  }
+  sichern();
+  const z=zielVon(k);
+  toast(z && k.punkte>=z.schwelle ? "Ziel erreicht! 🎉" : "+"+punkte);
+}
+
+/* ================= START ================= */
+function renderStart(){
+  const ids=Object.keys(DB.kinder);
+  if(!ids.length){
+    // Ersteinrichtung. Ohne diesen Schritt stünden Namen und Geburtsdaten im
+    // Programmcode — und der liegt öffentlich.
+    $("heroSub").textContent="Einmal einrichten, dann kann es losgehen.";
+    $("kidGrid").innerHTML=`<div class="card voll">
+      <h3>Wer benutzt die App?</h3>
+      <div class="note" style="margin-bottom:6px">Trag ein Kind ein. Weitere lassen sich später
+      im Elternbereich hinzufügen. Alles bleibt auf diesem Gerät.</div>
+      ${kindFormular("neu")}
+      <div class="row"><button class="btn primary" data-add="neu">Hinzufügen</button></div>
+    </div>`;
+    kindFormularAktiv("neu");
+    bindeNeu();
+    $("gate").style.display="none";
+    return;
+  }
+  $("gate").style.display="";
+  $("heroSub").textContent=ids.length>1?"Wähl aus, um wen es geht.":"";
+  $("kidGrid").innerHTML=ids.map(id=>{
+    const k=DB.kinder[id];
+    return `<button class="kid" data-kid="${id}">
+      <span class="avatar" style="background:${esc(k.farbe)}">${esc((k.name||"?")[0])}</span>
+      <span><span class="nm">${esc(k.name)}</span><br><span class="pts">${k.punkte} Punkte</span></span>
+    </button>`;
+  }).join("");
+  document.querySelectorAll("[data-kid]").forEach(b=>b.onclick=()=>{kind=b.dataset.kid;renderKid();zeige("s-kid");});
+}
+function bindeNeu(){
+  const add=document.querySelector("[data-add]");
+  if(!add) return;
+  add.onclick=()=>{
+    const d=kindAusFormular("neu"); if(!d) return;
+    DB.kinder[neueId()]=neuesKind(d.name,d.geb,d.farbe);
+    sichern(); renderStart(); renderParent(); toast(d.name+" ist dabei 🎉");
+  };
+}
+
+/* ---------- Kind anlegen und ändern ---------- */
+function kindFormular(p,k){
+  k=k||{};
+  return `<label for="${p}Name">Name</label>
+    <input type="text" id="${p}Name" value="${esc(k.name||"")}" placeholder="Vorname" autocomplete="off">
+    <label for="${p}Geb">Geburtsdatum</label>
+    <input type="date" id="${p}Geb" value="${esc(k.geb||"")}">
+    <label>Farbe für den Anfangsbuchstaben</label>
+    <div class="farben" id="${p}Farben">${FARBEN.map(f=>
+      `<button class="farbe${k.farbe===f.v?" an":""}" data-f="${f.v}" style="background:${f.v}" title="${f.t}" aria-label="${f.t}"></button>`).join("")}</div>`;
+}
+function kindFormularAktiv(p){
+  const box=$(p+"Farben"); if(!box) return;
+  if(!box.querySelector(".an")) box.firstElementChild.classList.add("an");
+  box.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{
+    box.querySelectorAll("[data-f]").forEach(x=>x.classList.remove("an"));
+    b.classList.add("an");
+  });
+}
+function kindAusFormular(p){
+  const name=$(p+"Name").value.trim();
+  if(!name){ toast("Bitte einen Namen eintragen"); return null; }
+  const geb=$(p+"Geb").value;
+  const f=$(p+"Farben").querySelector(".an");
+  return {name,geb,farbe:f?f.dataset.f:FARBEN[0].v};
+}
+
+/* ================= KIND ================= */
+function renderKid(){
+  const k=K();
+  $("kidName").textContent=k.name;
+  $("kidAge").textContent=alterText(k.geb);
+  $("kidPts").textContent=k.punkte;
+  $("kidTotal").innerHTML="insgesamt gesammelt<br>"+k.gesamt;
+
+  const z=zielVon(k);
+  if(z){
+    const p=Math.min(100,Math.round(k.punkte/z.schwelle*100)), fertig=k.punkte>=z.schwelle;
+    $("goalBox").innerHTML=`<div class="goal">
+      ${z.bild?`<img src="${z.bild}" alt="">`:`<div class="goal-none">🎁</div>`}
+      <div class="goal-body">
+        <div class="goal-name">${esc(z.name)}</div>
+        <div class="goal-meta">${k.punkte} von ${z.schwelle}${z.link?` · <a href="${esc(z.link)}" target="_blank" rel="noopener">ansehen</a>`:""}</div>
+        <div class="track"><div class="fill ${fertig?"done":""}" style="width:${p}%"></div></div>
+      </div></div>`;
+  } else {
+    $("goalBox").innerHTML=`<div class="goal"><div class="goal-none">🎁</div>
+      <div class="goal-body"><div class="goal-name">Noch kein Ziel</div>
+      <div class="goal-meta">Papa oder Mama kann eins anlegen</div></div></div>`;
+  }
+
+  $("areaList").innerHTML=Object.keys(BEREICHE).map(b=>{
+    const n=DB.kategorien.filter(c=>c.bereich===b&&!c.graduiert).length;
+    return `<button class="area" data-area="${b}">
+      <span class="ico">${BEREICHE[b].ico}</span>
+      <span><span class="t">${BEREICHE[b].t}</span><br><span class="d">${BEREICHE[b].d}</span></span>
+      <span class="chev">›</span></button>`;
+  }).join("");
+  document.querySelectorAll("[data-area]").forEach(b=>b.onclick=()=>{bereich=b.dataset.area;renderArea();zeige("s-area");});
+
+  const ab=k.abzeichen.slice(-6).reverse();
+  $("badgeBox").innerHTML=ab.length?`<div class="badges">${ab.map(a=>`<span class="badge">🏅 ${esc(a.text)}</span>`).join("")}</div>`:"";
+}
+
+/* ---------- Balancekissen: zweite tägliche Pflichteinheit ----------
+   Ein Fuß auf dem Kissen, mit dem anderen wird ein Ball nach vorne und zur Seite
+   gerollt. `seite` bezeichnet das **Standbein** — das ist das Bein, das arbeitet.
+   Bewusst zwei getrennte Knöpfe statt eines für die ganze Einheit. Ein Bein,
+   das regelmäßig ausgelassen wird, ist bei Stabilitätsarbeit die eigentliche
+   Information — mit einem Sammelknopf wäre es unsichtbar.
+   Der Block ist keine Kategorie: er belohnt eine erledigte Pflicht, keinen Versuch. */
+function balanceBlock(k){
+  const b=k.log.filter(e=>e.kat==="balance");
+  const heuteB=b.filter(e=>e.tag===heute());
+  const links=heuteB.some(e=>e.seite==="links"), rechts=heuteB.some(e=>e.seite==="rechts");
+  const p=DB.einstellungen.bal, ziel=DB.einstellungen.balZiel;
+
+  // Wochenbild: ein Tag zählt erst, wenn beide Seiten eingetragen sind
+  const wk=kw(heute()), woche=b.filter(e=>kw(e.tag)===wk);
+  const proTag={};
+  woche.forEach(e=>{ (proTag[e.tag]=proTag[e.tag]||new Set()).add(e.seite); });
+  const ganz=Object.values(proTag).filter(s=>s.size>=2).length;
+  const nL=woche.filter(e=>e.seite==="links").length, nR=woche.filter(e=>e.seite==="rechts").length;
+
+  return `<div class="today">
+    <h3>Balancekissen</h3>
+    <p>Jeden Tag 8 Minuten — 4 Minuten auf jedem Bein. Ein Fuß steht auf dem Kissen,
+    mit dem anderen den Ball nach vorne und zur Seite rollen.</p>
+    <div class="mins">
+      <button class="min" data-seite="links" ${links?"disabled":""}><span class="n">Links steht</span><span class="p">4 Min · ${p} ${p===1?"Punkt":"Punkte"}</span></button>
+      <button class="min" data-seite="rechts" ${rechts?"disabled":""}><span class="n">Rechts steht</span><span class="p">4 Min · ${p} ${p===1?"Punkt":"Punkte"}</span></button>
+    </div>
+    ${links&&rechts?`<div class="done-note">✓ Heute beide Beine geschafft.</div>`
+      :links?`<div class="week">Linkes Bein ist eingetragen. Jetzt noch rechts.</div>`
+      :rechts?`<div class="week">Rechtes Bein ist eingetragen. Jetzt noch links.</div>`:""}
+    <div class="week">${ganz===0?"Diese Woche noch kein kompletter Tag."
+      :`${ganz} von ${ziel} Tagen diese Woche${ganz>=ziel?" — Wochenziel erreicht 🎉":" — passt"}`}</div>
+    ${nL!==nR?`<div class="week">Diese Woche ${nL}× linkes Bein, ${nR}× rechtes.</div>`:""}
+  </div>`;
+}
+
+/* ================= BEREICH ================= */
+function renderArea(){
+  const k=K(), B=BEREICHE[bereich];
+  $("areaTitle").textContent=B.t;
+  $("areaSub").textContent = bereich==="fussball" ? "Papa trägt ein, was du erzählst" : "Du kannst selbst abhaken";
+
+  let extra="";
+  if(bereich==="fussball"){
+    const u=k.log.filter(e=>e.kat==="uebung"), heuteDa=u.some(e=>e.tag===heute());
+    const wk=kw(heute()), tage=new Set(u.filter(e=>kw(e.tag)===wk).map(e=>e.tag)).size;
+    const ziel=DB.einstellungen.wochenziel;
+    extra=`<div class="today">
+      <h3>FPro geübt?</h3>
+      <p>Einmal am Tag. Freies Spielen zählt hier nicht — das ist einfach so gut.</p>
+      <div class="mins">
+        <button class="min" data-min="10" ${heuteDa?"disabled":""}><span class="n">10 Min</span><span class="p">${DB.einstellungen.u10} Punkte</span></button>
+        <button class="min" data-min="20" ${heuteDa?"disabled":""}><span class="n">20 Min</span><span class="p">${DB.einstellungen.u20} Punkte</span></button>
+      </div>
+      ${heuteDa?`<div class="done-note">✓ Für heute eingetragen. Morgen wieder.</div>`:""}
+      <div class="week">${tage===0?"Diese Woche noch keine Einheit.":`${tage} von ${ziel} Tagen diese Woche${tage>=ziel?" — Wochenziel erreicht 🎉":" — passt"}`}</div>
+    </div>
+    ${balanceBlock(k)}
+    <div class="seg-lab">Wo war das?</div>
+    <div class="seg" id="segK">
+      <button data-k="training" aria-pressed="${kontext==="training"}">Training</button>
+      <button data-k="spiel" aria-pressed="${kontext==="spiel"}">Spiel</button>
+      <button data-k="turnier" aria-pressed="${kontext==="turnier"}">Turnier</button>
+    </div>
+    <div class="seg-lab">Wer hat es erzählt?</div>
+    <div class="seg" id="segQ">
+      <button data-q="kind_genannt" aria-pressed="${quelle==="kind_genannt"}">${esc(k.name)} hat es gesagt</button>
+      <button data-q="vater_ergaenzt" aria-pressed="${quelle==="vater_ergaenzt"}">Papa ergänzt</button>
+    </div>
+    <div class="seg-lab" style="margin-bottom:10px">Was hast du heute probiert?</div>`;
+  }
+  $("areaExtra").innerHTML=extra;
+
+  if(bereich==="fussball"){
+    document.querySelectorAll("#segK button").forEach(b=>b.onclick=()=>{kontext=b.dataset.k;renderArea();});
+    document.querySelectorAll("#segQ button").forEach(b=>b.onclick=()=>{quelle=b.dataset.q;renderArea();});
+    document.querySelectorAll("[data-min]").forEach(b=>b.onclick=()=>{
+      const m=+b.dataset.min, p=m===20?DB.einstellungen.u20:DB.einstellungen.u10;
+      vergib("uebung",p,{minuten:m}); renderArea();
+    });
+    document.querySelectorAll("[data-seite]").forEach(b=>b.onclick=()=>{
+      vergib("balance",DB.einstellungen.bal,{seite:b.dataset.seite,minuten:4}); renderArea();
+    });
+  }
+
+  $("catList").innerHTML=DB.kategorien.filter(c=>c.bereich===bereich&&!c.graduiert).map(c=>
+    `<button class="cat" data-cat="${c.id}">
+      <span class="ico">${c.ico}</span><span class="tx">${esc(c.text)}</span><span class="pt">+${c.punkte}</span>
+    </button>`).join("") || `<div class="empty">Hier gibt es gerade nichts.</div>`;
+
+  document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
+    const c=DB.kategorien.find(x=>x.id===b.dataset.cat);
+    vergib(c.id,c.punkte, bereich==="fussball"?{kontext,quelle}:{});
+    b.classList.add("hit"); setTimeout(()=>b.classList.remove("hit"),560);
+  });
+}
+
+/* ================= BELOHNUNGEN ================= */
+function renderRewards(){
+  const k=K();
+  $("rwSub").textContent=k.name+" · "+k.punkte+" Punkte";
+  const list=k.belohnungen||[];
+  $("rwList").innerHTML = list.length ? list.map(b=>{
+    const ok=k.punkte>=b.schwelle, akt=b.id===k.ziel;
+    return `<div class="rw">
+      ${b.bild?`<img src="${b.bild}" alt="">`:`<div class="ph">${b.typ==="wahlrecht"?"⭐":b.typ==="erlebnis"?"🎢":"🎁"}</div>`}
+      <div class="b"><div class="n">${esc(b.name)}${akt?' <span class="tag">Ziel</span>':""}</div>
+        <div class="m">${b.schwelle} Punkte${b.link?` · <a href="${esc(b.link)}" target="_blank" rel="noopener">ansehen</a>`:""}</div></div>
+      ${ok?`<button class="pill go" data-einl="${b.id}">Einlösen</button>`
+          :`<button class="pill sm" data-ziel="${b.id}">${akt?"Ziel":"Als Ziel"}</button>`}
+    </div>`;
+  }).join("") : `<div class="empty">Noch keine Belohnung angelegt.<br>Papa oder Mama kann im Elternbereich eine hinzufügen.</div>`;
+
+  document.querySelectorAll("[data-ziel]").forEach(b=>b.onclick=()=>{K().ziel=b.dataset.ziel;sichern();renderRewards();toast("Neues Ziel gesetzt");});
+  document.querySelectorAll("[data-einl]").forEach(b=>b.onclick=()=>{
+    const bel=K().belohnungen.find(x=>x.id===b.dataset.einl);
+    if(!confirm(`„${bel.name}" für ${bel.schwelle} Punkte einlösen?`))return;
+    const k2=K();
+    k2.punkte-=bel.schwelle;                     // gesamt bleibt stehen
+    k2.eingeloest.push({name:bel.name,schwelle:bel.schwelle,tag:heute()});
+    k2.belohnungen=k2.belohnungen.filter(x=>x.id!==bel.id);
+    if(k2.ziel===bel.id) k2.ziel=(k2.belohnungen[0]||{}).id||null;
+    sichern(); renderRewards(); toast("Eingelöst 🎉");
+  });
+}
+
+/* ================= ELTERN ================= */
+function bildVerkleinern(file,cb){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const im=new Image();
+    im.onload=()=>{
+      const max=600, s=Math.min(1,max/Math.max(im.width,im.height));
+      const cv=document.createElement("canvas");
+      cv.width=Math.round(im.width*s); cv.height=Math.round(im.height*s);
+      cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);
+      cb(cv.toDataURL("image/jpeg",.8));
+    };
+    im.onerror=()=>cb(null);
+    im.src=fr.result;
+  };
+  fr.onerror=()=>cb(null);
+  fr.readAsDataURL(file);
+}
+
+function graduierbar(kid){
+  const k=DB.kinder[kid];
+  return DB.kategorien.filter(c=>{
+    if(c.graduiert) return false;
+    const wochen=new Set(k.log.filter(e=>e.kat===c.id).map(e=>kw(e.tag)));
+    return wochen.size>=4;
+  });
+}
+
+function renderKats(){
+  const box=$("katList"); if(!box) return;
+  box.innerHTML=Object.keys(BEREICHE).map(b=>{
+    const rows=DB.kategorien.filter(c=>c.bereich===b);
+    if(!rows.length) return "";
+    return `<div class="kgrp">${BEREICHE[b].ico} ${BEREICHE[b].t}</div>`+rows.map(c=>
+      `<div class="kr ${c.graduiert?"pause":""}" data-id="${c.id}">
+        <input class="kico" value="${esc(c.ico)}" maxlength="3" aria-label="Symbol">
+        <input class="ktx" value="${esc(c.text)}" aria-label="Text">
+        <input class="kpt" type="number" min="0" value="${c.punkte}" inputmode="numeric" aria-label="Punkte">
+        <button class="pill sm ktog">${c.graduiert?"Pause":"Aktiv"}</button>
+      </div>`).join("");
+  }).join("");
+
+  box.querySelectorAll(".kr").forEach(r=>{
+    const c=DB.kategorien.find(x=>x.id===r.dataset.id);
+    const merk=()=>{ c.eigen=true; sichern(); };   // eigene Änderung: nicht mehr überschreiben
+    r.querySelector(".kico").onchange=e=>{ c.ico=e.target.value.trim()||"•"; merk(); };
+    r.querySelector(".ktx").onchange=e=>{ const v=e.target.value.trim(); if(v){c.text=v;merk();} else e.target.value=c.text; };
+    r.querySelector(".kpt").onchange=e=>{ c.punkte=Math.max(0,+e.target.value||0); merk(); };
+    r.querySelector(".ktog").onclick=()=>{ c.graduiert=!c.graduiert; sichern(); renderKats(); toast(c.graduiert?"Auf Pause gesetzt":"Wieder aktiv"); };
+  });
+}
+
+function renderParent(){
+  let neuBild=null;
+  const kids=Object.keys(DB.kinder);
+  const grads=kids.flatMap(id=>graduierbar(id).map(c=>({id,c})));
+
+  $("parentBody").innerHTML=`
+  ${grads.length?`<div class="grad">🎓 Läuft seit vier Wochen zuverlässig: ${grads.map(g=>esc(g.c.text)+" ("+esc(DB.kinder[g.id].name)+")").join(", ")}.
+    Vorschlag: aus der Punkteliste nehmen — die Gewohnheit trägt sich selbst.</div>`:""}
+
+  <div class="card">
+    <h3>Kinder</h3>
+    <div class="note" style="margin-bottom:10px">Name, Geburtsdatum und Farbe stehen nur auf
+    diesem Gerät — im Programm der App steht kein Name.</div>
+    ${kids.map(i=>{const k=DB.kinder[i];
+      return `<div class="kw">
+        <span class="avatar sm" style="background:${esc(k.farbe)}">${esc((k.name||"?")[0])}</span>
+        <div class="b"><div class="n">${esc(k.name)}</div>
+          <div class="m">${k.geb?esc(alterText(k.geb)):"kein Geburtsdatum"} · Schwelle ${k.schwelle}</div></div>
+        <button class="pill sm" data-edit="${i}">Ändern</button>
+      </div>`;}).join("")}
+    <div id="kindEdit"></div>
+    <div class="row"><button class="btn" id="kindNeu">Kind hinzufügen</button></div>
+  </div>
+
+  ${kids.length?`<div class="card">
+    <h3>Belohnung anlegen</h3>
+    <label for="pKid">Für wen</label>
+    <select id="pKid">${kids.map(i=>`<option value="${i}">${esc(DB.kinder[i].name)}</option>`).join("")}</select>
+    <label for="pName">Name</label>
+    <input type="text" id="pName" placeholder="z. B. Fußballschuhe">
+    <label for="pTyp">Art</label>
+    <select id="pTyp">
+      <option value="wahlrecht">Wahlrecht — er darf etwas bestimmen</option>
+      <option value="erlebnis">Erlebnis — Ausflug, Freund einladen</option>
+      <option value="ding">Ding</option>
+    </select>
+    <label for="pLink">Link (optional)</label>
+    <input type="url" id="pLink" placeholder="https://…" inputmode="url">
+    <label for="pBild">Bild aus der Fotomediathek</label>
+    <input type="file" id="pBild" accept="image/*">
+    <div class="note" style="margin-top:6px">Das Bild wird auf dem Gerät gespeichert und verkleinert. Ein Link allein kann kein Bild laden — das erlauben Shop-Seiten dem Browser nicht.</div>
+    <label for="pSchwelle">Punkte nötig</label>
+    <input type="number" id="pSchwelle" value="50" min="1" inputmode="numeric">
+    <div class="row"><button class="btn primary" id="pAdd">Belohnung speichern</button></div>
+  </div>`:""}
+
+  <div class="card">
+    <h3>Kategorien</h3>
+    <div class="note" style="margin-bottom:12px">Symbol, Text und Punkte lassen sich ändern.
+    <strong>Pause</strong> nimmt eine Kategorie aus der Liste der Kinder, ohne sie zu löschen —
+    das ist der Weg, wenn etwas zur Gewohnheit geworden ist.</div>
+    <div id="katList"></div>
+    <div class="row"><button class="btn" id="katAdd">Eigene Kategorie hinzufügen</button></div>
+  </div>
+
+  <div class="card">
+    <h3>Tägliche Einheiten</h3>
+    <label for="pU10">FPro ab 10 Minuten</label><input type="number" id="pU10" value="${DB.einstellungen.u10}" min="0" inputmode="numeric">
+    <label for="pU20">FPro ab 20 Minuten</label><input type="number" id="pU20" value="${DB.einstellungen.u20}" min="0" inputmode="numeric">
+    <label for="pWZ">FPro — Wochenziel in Tagen</label><input type="number" id="pWZ" value="${DB.einstellungen.wochenziel}" min="1" max="7" inputmode="numeric">
+    <div class="hr"></div>
+    <label for="pBal">Balancekissen — Punkte je Bein</label><input type="number" id="pBal" value="${DB.einstellungen.bal}" min="0" inputmode="numeric">
+    <label for="pBalZ">Balancekissen — Wochenziel in Tagen</label><input type="number" id="pBalZ" value="${DB.einstellungen.balZiel}" min="1" max="7" inputmode="numeric">
+    <div class="note" style="margin-top:8px">Beide Beine zusammen ergeben die Tageseinheit — bei ${DB.einstellungen.bal} je Bein also ${DB.einstellungen.bal*2} Punkte für 8 Minuten.
+    Kein Streak, sondern ein Wochenziel — Ruhetage sollen sich nicht wie Versagen anfühlen.</div>
+    <div class="row"><button class="btn" id="pSave">Speichern</button></div>
+  </div>
+
+  <div class="card">
+    <h3>Stand</h3>
+    ${kids.map(i=>{const k=DB.kinder[i];
+      return `<div class="note" style="margin-bottom:8px"><strong>${esc(k.name)}</strong> — ${k.punkte} Punkte, insgesamt ${k.gesamt}, ${k.log.length} Einträge, ${k.eingeloest.length} eingelöst</div>`;
+    }).join("")}
+    <div class="hr"></div>
+    <div class="row">
+      <button class="btn" id="pExport">Sicherung speichern</button>
+      <button class="btn ghost" id="pImportBtn">Laden</button>
+    </div>
+    <input type="file" id="pImport" accept="application/json" hidden>
+    <div class="note" style="margin-top:10px">Die Daten liegen nur auf diesem Gerät. Kein Konto, keine Cloud. Wenn Safari-Daten gelöscht werden, sind sie weg — deshalb ab und zu sichern.</div>
+  </div>
+
+  <div class="card">
+    <h3>Warum es keine Punkte für Tore gibt</h3>
+    <div class="note">Punkte gibt es fürs <strong>Probieren</strong>, nicht fürs Gelingen — auch dann, wenn es schiefgeht. Ein Tor hängt von Mitspielern, Gegner und Glück ab; ein Versuch hängt nur vom Kind ab. Und Punkte abziehen kann diese App nicht.</div>
+  </div>`;
+
+  renderKats();
+
+  /* ---- Kinder anlegen und ändern ---- */
+  const editBox=$("kindEdit");
+  const editSchliessen=()=>{ editBox.innerHTML=""; };
+  $("kindNeu").onclick=()=>{
+    editBox.innerHTML=`<div class="hr"></div>${kindFormular("neu")}
+      <div class="row"><button class="btn primary" data-add="neu">Hinzufügen</button>
+      <button class="btn ghost" id="kindAbbruch">Abbrechen</button></div>`;
+    kindFormularAktiv("neu"); bindeNeu();
+    $("kindAbbruch").onclick=editSchliessen;
+  };
+  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.edit, k=DB.kinder[id];
+    editBox.innerHTML=`<div class="hr"></div>${kindFormular("ed",k)}
+      <label for="edSchwelle">Punkte bis zum Geschenk</label>
+      <input type="number" id="edSchwelle" value="${k.schwelle}" min="1" inputmode="numeric">
+      <div class="row"><button class="btn primary" id="edSave">Speichern</button>
+      <button class="btn ghost" id="edAbbruch">Abbrechen</button></div>
+      <div class="row"><button class="btn ghost" id="edWeg">${esc(k.name)} entfernen</button></div>`;
+    kindFormularAktiv("ed");
+    $("edAbbruch").onclick=editSchliessen;
+    $("edSave").onclick=()=>{
+      const d=kindAusFormular("ed"); if(!d) return;
+      Object.assign(k,d,{schwelle:Math.max(1,+$("edSchwelle").value||50)});
+      sichern(); renderStart(); renderParent(); toast("Gespeichert");
+    };
+    // Einziger Weg, Punkte verschwinden zu lassen — deshalb doppelt abgesichert.
+    $("edWeg").onclick=()=>{
+      if(!confirm(`„${k.name}" entfernen? Punkte, Verlauf und Belohnungen werden gelöscht und sind nicht wiederherstellbar.`))return;
+      if(!confirm("Wirklich sicher? Vorher besser eine Sicherung speichern."))return;
+      delete DB.kinder[id]; if(kind===id) kind=null;
+      sichern(); renderStart(); renderParent(); toast("Entfernt");
+    };
+  });
+
+  if($("pAdd")){
+  $("pBild").onchange=e=>{
+    const f=e.target.files[0]; if(!f)return;
+    bildVerkleinern(f,d=>{neuBild=d; toast(d?"Bild übernommen":"Bild ging nicht");});
+  };
+  $("pAdd").onclick=()=>{
+    const n=$("pName").value.trim(); if(!n)return toast("Bitte einen Namen eingeben");
+    const k=DB.kinder[$("pKid").value];
+    const b={id:"b"+Date.now(),name:n,typ:$("pTyp").value,link:$("pLink").value.trim(),
+             bild:neuBild,schwelle:Math.max(1,+$("pSchwelle").value||50)};
+    k.belohnungen.push(b); if(!k.ziel)k.ziel=b.id;
+    sichern(); toast("Belohnung gespeichert"); renderParent();
+  };
+  }
+  $("katAdd").onclick=()=>{
+    const t=prompt("Was soll die Kategorie heißen?"); if(!t||!t.trim())return;
+    const b=prompt("Bereich: fussball, zuhause oder schule?","zuhause");
+    if(!b||!BEREICHE[b.trim()])return toast("Bereich nicht erkannt");
+    const p=parseInt(prompt("Wie viele Punkte?","2"),10);
+    DB.kategorien.push({id:"x"+Date.now(),bereich:b.trim(),text:t.trim(),ico:"⭐",
+                        punkte:isNaN(p)?2:Math.max(0,p),wer:"kind",graduiert:false,eigen:true});
+    sichern(); renderKats(); toast("Kategorie hinzugefügt");
+  };
+
+  $("pSave").onclick=()=>{
+    DB.einstellungen.u10=Math.max(0,+$("pU10").value||0);
+    DB.einstellungen.u20=Math.max(0,+$("pU20").value||0);
+    DB.einstellungen.wochenziel=Math.min(7,Math.max(1,+$("pWZ").value||5));
+    DB.einstellungen.bal=Math.max(0,+$("pBal").value||0);
+    DB.einstellungen.balZiel=Math.min(7,Math.max(1,+$("pBalZ").value||7));
+    sichern(); toast("Gespeichert");
+  };
+  $("pExport").onclick=()=>{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(DB,null,2)],{type:"application/json"}));
+    a.download="punkte-sicherung-"+heute()+".json"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  };
+  $("pImportBtn").onclick=()=>$("pImport").click();
+  $("pImport").onchange=e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const fr=new FileReader();
+    fr.onload=()=>{ try{
+      const d=JSON.parse(fr.result);
+      if(!d||!d.kinder) throw 0;
+      if(!confirm("Sicherung laden? Der jetzige Stand auf diesem Gerät wird ersetzt.")) return;
+      DB=d; sichern(); renderStart(); renderParent(); toast("Sicherung geladen");
+    }catch(err){ toast("Datei konnte nicht gelesen werden"); } };
+    fr.readAsText(f);
+  };
+}
+
+/* ================= Navigation ================= */
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
+  const t=b.dataset.go;
+  if(t==="s-kid")renderKid();
+  if(t==="s-rewards")renderRewards();
+  if(t==="s-start")renderStart();
+  zeige(t);
+});
+
+// Elternbereich: 1,2 s gedrückt halten
+(function(){
+  const g=$("gate"); let t=null;
+  const start=()=>{g.classList.add("hold");t=setTimeout(()=>{g.classList.remove("hold");renderParent();zeige("s-parent");},1200);};
+  const stop=()=>{g.classList.remove("hold");clearTimeout(t);};
+  // Kurzes Antippen erklärt sich selbst, statt wirkungslos zu bleiben
+  g.addEventListener("click",()=>{ if(!document.getElementById("s-parent").classList.contains("on")) toast("Länger gedrückt halten"); });
+  ["touchstart","mousedown"].forEach(ev=>g.addEventListener(ev,start,{passive:true}));
+  ["touchend","touchcancel","touchmove","mouseup","mouseleave"].forEach(ev=>g.addEventListener(ev,stop,{passive:true}));
+})();
+
+/* Offline-Betrieb. Greift nur unter https und wenn die Datei unter einer eigenen
+   Adresse liegt; als lokale Datei schlägt die Registrierung still fehl. */
+if("serviceWorker" in navigator && location.protocol==="https:"){
+  addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+
+laden(); renderStart();
+</script>
