@@ -925,7 +925,7 @@ function renderParent(){
       <button class="btn" id="pExport">Sicherung speichern</button>
       <button class="btn ghost" id="pImportBtn">Laden</button>
     </div>
-    <input type="file" id="pImport" accept="application/json" hidden>
+    <input type="file" id="pImport" accept=".json,application/json,text/plain" hidden>
     <div class="note" style="margin-top:10px">Die Daten liegen nur auf diesem Gerät. Kein Konto, keine Cloud. Wenn Safari-Daten gelöscht werden, sind sie weg — deshalb ab und zu sichern.</div>
   </div>
 
@@ -1042,8 +1042,23 @@ function renderParent(){
     fr.onload=()=>{ try{
       const d=JSON.parse(fr.result);
       if(!d||!d.kinder) throw 0;
-      if(!confirm("Sicherung laden? Der jetzige Stand auf diesem Gerät wird ersetzt.")) return;
-      DB=d; sichern(); renderStart(); renderParent(); toast("Sicherung geladen");
+      /* Der Import ist der einzige Vorgang, der Punkte verschwinden lassen kann.
+         Trägt das Gerät welche, werden sie in der Rückfrage beim Namen genannt —
+         eine allgemeine Warnung liest sich weg, konkrete Zahlen nicht. */
+      const da=Object.values(DB.kinder||{}).filter(k=>k.punkte>0||k.gesamt>0);
+      const frage=da.length
+        ? "Sicherung laden?\n\nDer Stand auf diesem Gerät wird ersetzt:\n"
+          +da.map(k=>"· "+k.name+": "+k.punkte+" Punkte").join("\n")
+          +"\n\nDiese Punkte sind danach weg."
+        : "Sicherung laden? Der jetzige Stand auf diesem Gerät wird ersetzt.";
+      if(!confirm(frage)) return;
+      DB=d;
+      /* Wie beim normalen Start: fehlende Felder und neue Kategorien nachziehen.
+         Ohne das fehlten einer älteren Sicherung z. B. die Balancekissen-Einstellungen,
+         und der Bereich zeigte "undefined Punkte", bis die App neu geladen wurde. */
+      nachruesten();
+      kind=null;                       // alte Auswahl kann auf ein Kind zeigen, das es nicht mehr gibt
+      sichern(); renderStart(); renderParent(); toast("Sicherung geladen");
     }catch(err){ toast("Datei konnte nicht gelesen werden"); } };
     fr.readAsText(f);
   };
