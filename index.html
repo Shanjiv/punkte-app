@@ -227,7 +227,9 @@ input[type=file]{font-size:14px;width:100%}
 .kr{display:flex;gap:6px;align-items:center;margin-bottom:8px}
 .kr .kico{width:52px;text-align:center;font-size:19px;padding:10px 4px}
 .kr .ktx{flex:1;min-width:0;font-size:15px;padding:10px}
-.kr .kpt{width:62px;text-align:center;padding:10px 4px;font-variant-numeric:tabular-nums}
+.kr .kpt{width:56px;text-align:center;padding:10px 4px;font-variant-numeric:tabular-nums}
+.kr{flex-wrap:wrap}
+.kr .kwer{white-space:nowrap}
 .kr input{border-radius:11px}
 .kr.pause .ktx,.kr.pause .kico{opacity:.45}
 /* Kinderverwaltung im Elternbereich */
@@ -345,6 +347,8 @@ const BEREICHE={
 
 function startKategorien(){
   const c=(id,bereich,text,ico,punkte,wer)=>({id,bereich,text,ico,punkte,wer,graduiert:false});
+  // Camp-Kategorien starten pausiert und ohne Zuordnung — sonst sähe sie sofort jedes Kind
+  const camp=(id,text,ico,punkte)=>({id,bereich:"fussball",text,ico,punkte,wer:"vater",graduiert:true,camp:true,nurFuer:null});
   return [
     // Fußball — nur Versuche, nie Ergebnisse. Vergabe durch den Vater im Dialogmodus.
     c("f8","fussball","Nach einem Fehler sofort wieder den Ball gefordert","🔁",4,"vater"),
@@ -366,6 +370,11 @@ function startKategorien(){
     c("f7","fussball","Laut den Ball gefordert","📣",2,"vater"),
     c("f9","fussball","Ohne Ball in Bewegung geblieben","🏃",2,"vater"),
     c("f12","fussball","Tasche selbst gepackt oder ausgepackt","🎒",1,"vater"),
+    // Fußballcamp — vom Vater am 2026-08-06 festgelegt. Kommen auf Pause ins System und
+    // werden im Elternbereich mit einem Tipp einem Kind zugeordnet und aktiviert.
+    camp("camp1","Im Camp: explosiver erster Schritt durch die Lücke","💥",15),
+    camp("camp2","Im Camp: gescannt und direkt in den freien Raum","👀",15),
+    camp("camp3","Im Camp: kontrollierter schneller Torschuss","🥅",15),
     // Zuhause — Kind hakt selbst ab
     c("z1","zuhause","Zimmer aufgeräumt","🧹",2,"kind"),
     c("z2","zuhause","Klamotten ordentlich weggeräumt","👕",2,"kind"),
@@ -438,7 +447,7 @@ function laden(){
    Ohne das würde ein Gerät, auf dem die App schon lief, weder Ergänzungen noch
    geänderte Formulierungen je sehen — der Katalog wird beim ersten Start gespeichert.
    KAT_VERSION bei jeder Änderung am Standardkatalog erhöhen. */
-const KAT_VERSION=7;
+const KAT_VERSION=8;
 /* Vom Vater entfernte Standardkategorien. Bereits vergebene Punkte bleiben erhalten —
    sie hängen am Protokolleintrag, nicht an der Kategorie. */
 const ENTFERNT=["e1"];
@@ -619,7 +628,7 @@ function renderKid(){
   }
 
   $("areaList").innerHTML=Object.keys(BEREICHE).map(b=>{
-    const n=DB.kategorien.filter(c=>c.bereich===b&&!c.graduiert).length;
+    const n=DB.kategorien.filter(c=>c.bereich===b&&!c.graduiert&&(!c.nurFuer||c.nurFuer===kind)).length;
     return `<button class="area" data-area="${b}">
       <span class="ico">${BEREICHE[b].ico}</span>
       <span><span class="t">${BEREICHE[b].t}</span><br><span class="d">${BEREICHE[b].d}</span></span>
@@ -717,7 +726,7 @@ function renderArea(){
     });
   }
 
-  $("catList").innerHTML=DB.kategorien.filter(c=>c.bereich===bereich&&!c.graduiert).map(c=>
+  $("catList").innerHTML=DB.kategorien.filter(c=>c.bereich===bereich&&!c.graduiert&&(!c.nurFuer||c.nurFuer===kind)).map(c=>
     `<button class="cat" data-cat="${c.id}">
       <span class="ico">${c.ico}</span><span class="tx">${esc(c.text)}</span><span class="pt">+${c.punkte}</span>
     </button>`).join("") || `<div class="empty">Hier gibt es gerade nichts.</div>`;
@@ -796,6 +805,7 @@ function renderKats(){
         <input class="kico" value="${esc(c.ico)}" maxlength="3" aria-label="Symbol">
         <input class="ktx" value="${esc(c.text)}" aria-label="Text">
         <input class="kpt" type="number" min="0" value="${c.punkte}" inputmode="numeric" aria-label="Punkte">
+        <button class="pill sm kwer">${werText(c)}</button>
         <button class="pill sm ktog">${c.graduiert?"Pause":"Aktiv"}</button>
       </div>`).join("");
   }).join("");
@@ -807,7 +817,22 @@ function renderKats(){
     r.querySelector(".ktx").onchange=e=>{ const v=e.target.value.trim(); if(v){c.text=v;merk();} else e.target.value=c.text; };
     r.querySelector(".kpt").onchange=e=>{ c.punkte=Math.max(0,+e.target.value||0); merk(); };
     r.querySelector(".ktog").onclick=()=>{ c.graduiert=!c.graduiert; sichern(); renderKats(); toast(c.graduiert?"Auf Pause gesetzt":"Wieder aktiv"); };
+    // Reihum: alle Kinder, dann jedes einzeln, dann wieder alle
+    r.querySelector(".kwer").onclick=()=>{
+      const ids=Object.keys(DB.kinder), i=ids.indexOf(c.nurFuer||"");
+      c.nurFuer = i+1>=ids.length ? null : ids[i+1];
+      sichern(); renderKats();
+      toast(c.nurFuer?"Nur für "+DB.kinder[c.nurFuer].name:"Für alle");
+    };
   });
+}
+/* Beschriftung des Wer-Knopfs. Ein Kind, das nicht mehr existiert, faellt still auf
+   "Alle" zurueck — sonst zeigte die Kategorie eine leere Zuordnung. */
+function werText(c){
+  if(!c.nurFuer) return "Alle";
+  const k=DB.kinder[c.nurFuer];
+  if(!k){ c.nurFuer=null; return "Alle"; }
+  return "Nur "+k.name;
 }
 
 function renderParent(){
@@ -815,7 +840,18 @@ function renderParent(){
   const kids=Object.keys(DB.kinder);
   const grads=kids.flatMap(id=>graduierbar(id).map(c=>({id,c})));
 
+  const camps=DB.kategorien.filter(c=>c.camp);
+  const campOffen=camps.length && camps.every(c=>c.graduiert && !c.nurFuer) && !DB.campWeg;
+
   $("parentBody").innerHTML=`
+  ${campOffen?`<div class="grad">🏕️ <strong>Neu: drei Kategorien fürs Fußballcamp</strong>, je ${camps[0].punkte} Punkte —
+    explosiver erster Schritt durch die Lücke · gescannt und direkt in den freien Raum ·
+    kontrollierter schneller Torschuss.<br>Sie sind noch für niemanden sichtbar. Für wen sollen sie gelten?
+    <div class="row" style="margin-top:10px">
+      ${kids.map(i=>`<button class="btn" data-camp="${i}">${esc(DB.kinder[i].name)}</button>`).join("")}
+      <button class="btn ghost" data-camp="">Alle</button>
+    </div>
+    <div class="row"><button class="btn ghost" id="campWeg">Später</button></div></div>`:""}
   ${grads.length?`<div class="grad">🎓 Läuft seit vier Wochen zuverlässig: ${grads.map(g=>esc(g.c.text)+" ("+esc(DB.kinder[g.id].name)+")").join(", ")}.
     Vorschlag: aus der Punkteliste nehmen — die Gewohnheit trägt sich selbst.</div>`:""}
 
@@ -862,6 +898,7 @@ function renderParent(){
     <strong>Pause</strong> nimmt eine Kategorie aus der Liste der Kinder, ohne sie zu löschen —
     das ist der Weg, wenn etwas zur Gewohnheit geworden ist.</div>
     <div id="katList"></div>
+    <div id="katNeu"></div>
     <div class="row"><button class="btn" id="katAdd">Eigene Kategorie hinzufügen</button></div>
   </div>
 
@@ -898,6 +935,16 @@ function renderParent(){
   </div>`;
 
   renderKats();
+
+  /* ---- Camp-Kategorien in einem Tipp zuordnen und aktivieren ---- */
+  document.querySelectorAll("[data-camp]").forEach(b=>b.onclick=()=>{
+    const ziel=b.dataset.camp||null;
+    DB.kategorien.filter(c=>c.camp).forEach(c=>{ c.nurFuer=ziel; c.graduiert=false; });
+    sichern(); renderParent();
+    toast(ziel?"Camp-Kategorien für "+DB.kinder[ziel].name+" aktiv":"Camp-Kategorien für alle aktiv");
+  });
+  const cw=$("campWeg");
+  if(cw) cw.onclick=()=>{ DB.campWeg=true; sichern(); renderParent(); };
 
   /* ---- Kinder anlegen und ändern ---- */
   const editBox=$("kindEdit");
@@ -948,13 +995,30 @@ function renderParent(){
   };
   }
   $("katAdd").onclick=()=>{
-    const t=prompt("Was soll die Kategorie heißen?"); if(!t||!t.trim())return;
-    const b=prompt("Bereich: fussball, zuhause oder schule?","zuhause");
-    if(!b||!BEREICHE[b.trim()])return toast("Bereich nicht erkannt");
-    const p=parseInt(prompt("Wie viele Punkte?","2"),10);
-    DB.kategorien.push({id:"x"+Date.now(),bereich:b.trim(),text:t.trim(),ico:"⭐",
-                        punkte:isNaN(p)?2:Math.max(0,p),wer:"kind",graduiert:false,eigen:true});
-    sichern(); renderKats(); toast("Kategorie hinzugefügt");
+    const box=$("katNeu");
+    if(box.innerHTML){ box.innerHTML=""; return; }
+    box.innerHTML=`<div class="hr"></div>
+      <label for="nkText">Was soll darin stehen?</label>
+      <input type="text" id="nkText" placeholder="z. B. Im Camp: mit links geschossen" autocomplete="off">
+      <label for="nkBereich">Bereich</label>
+      <select id="nkBereich">${Object.keys(BEREICHE).map(b=>`<option value="${b}">${BEREICHE[b].ico} ${BEREICHE[b].t}</option>`).join("")}</select>
+      <label for="nkIco">Symbol</label>
+      <input type="text" id="nkIco" value="⭐" maxlength="3">
+      <label for="nkPunkte">Punkte</label>
+      <input type="number" id="nkPunkte" value="2" min="0" inputmode="numeric">
+      <label for="nkWer">Für wen</label>
+      <select id="nkWer"><option value="">Alle</option>${Object.keys(DB.kinder).map(i=>`<option value="${i}">Nur ${esc(DB.kinder[i].name)}</option>`).join("")}</select>
+      <div class="row"><button class="btn primary" id="nkSave">Anlegen</button>
+      <button class="btn ghost" id="nkAbbruch">Abbrechen</button></div>`;
+    $("nkAbbruch").onclick=()=>{box.innerHTML="";};
+    $("nkSave").onclick=()=>{
+      const t=$("nkText").value.trim(); if(!t) return toast("Bitte einen Text eingeben");
+      DB.kategorien.push({id:"x"+Date.now(),bereich:$("nkBereich").value,text:t,
+        ico:$("nkIco").value.trim()||"⭐",punkte:Math.max(0,+$("nkPunkte").value||0),
+        wer:$("nkBereich").value==="fussball"?"vater":"kind",graduiert:false,eigen:true,
+        nurFuer:$("nkWer").value||null});
+      sichern(); box.innerHTML=""; renderKats(); toast("Kategorie hinzugefügt");
+    };
   };
 
   $("pSave").onclick=()=>{
