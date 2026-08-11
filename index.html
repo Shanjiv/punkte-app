@@ -335,6 +335,9 @@ input[type=file]{font-size:14px;width:100%}
 
 <script>
 "use strict";
+/* Beim Ändern der App mitziehen. Steht im Elternbereich unter "Stand" und ist der
+   schnellste Weg zu erkennen, ob ein Gerät wirklich die neue Fassung geladen hat. */
+const FASSUNG="2026-08-06 c";
 const KEY="punkte_v1";
 const KEY_ALT="kickers_punkte_v1";   // Schlüssel der ersten Fassung, wird einmalig übernommen
 const $=id=>document.getElementById(id);
@@ -935,6 +938,10 @@ function renderParent(){
     </div>
     <input type="file" id="pImport" accept=".json,application/json,text/plain" hidden>
     <div class="note" style="margin-top:10px">Die Daten liegen nur auf diesem Gerät. Kein Konto, keine Cloud. Wenn Safari-Daten gelöscht werden, sind sie weg — deshalb ab und zu sichern.</div>
+    <div class="hr"></div>
+    <div class="note">Fassung <strong>${FASSUNG}</strong> · Katalog ${KAT_VERSION} · ${DB.kategorien.length} Kategorien<br>
+    Adresse: <span style="word-break:break-all">${esc(location.origin+location.pathname)}</span><br>
+    Punkte hängen an dieser Adresse. Eine andere Adresse hat einen eigenen Stand.</div>
   </div>
 
   <div class="card">
