@@ -375,25 +375,27 @@ function startKategorien(){
     camp("camp1","Im Camp: explosiver erster Schritt durch die Lücke","💥",15),
     camp("camp2","Im Camp: gescannt und direkt in den freien Raum","👀",15),
     camp("camp3","Im Camp: kontrollierter schneller Torschuss","🥅",15),
-    // Zuhause — Kind hakt selbst ab
-    c("z1","zuhause","Zimmer aufgeräumt","🧹",2,"kind"),
-    c("z2","zuhause","Klamotten ordentlich weggeräumt","👕",2,"kind"),
-    c("z3","zuhause","Schuhe weggeräumt","👟",1,"kind"),
-    c("z4","zuhause","Bett gemacht","🛏️",1,"kind"),
-    c("z5","zuhause","Tisch gedeckt oder abgeräumt","🍽️",2,"kind"),
-    c("z6","zuhause","Wäsche in den Korb","🧺",1,"kind"),
-    c("z7","zuhause","Schulranzen am Abend vorher gepackt","🎒",2,"kind"),
-    c("z8","zuhause","Zähne geputzt ohne Erinnerung","🪥",1,"kind"),
+    // Zuhause — Kind hakt selbst ab. Nach Punktwert sortiert, damit die Zahlen
+    // von oben nach unten fallen und die Liste für ein Kind lesbar bleibt.
     c("z9","zuhause","Meinem Bruder geholfen","💛",3,"kind"),
     c("z10","zuhause","Einen Streit selbst gelöst","🕊️",3,"kind"),
+    c("z12","zuhause","Geduscht","🚿",3,"kind"),
+    c("z1","zuhause","Zimmer aufgeräumt","🧹",2,"kind"),
+    c("z2","zuhause","Klamotten ordentlich weggeräumt","👕",2,"kind"),
+    c("z5","zuhause","Tisch gedeckt oder abgeräumt","🍽️",2,"kind"),
+    c("z7","zuhause","Schulranzen am Abend vorher gepackt","🎒",2,"kind"),
     c("z11","zuhause","Rechtzeitig ins Bett","🌙",2,"kind"),
+    c("z3","zuhause","Schuhe weggeräumt","👟",1,"kind"),
+    c("z4","zuhause","Bett gemacht","🛏️",1,"kind"),
+    c("z6","zuhause","Wäsche in den Korb","🧺",1,"kind"),
+    c("z8","zuhause","Zähne geputzt ohne Erinnerung","🪥",1,"kind"),
     // Schule — Prozess, nie Noten
+    c("s5","schule","Etwas Schwieriges nochmal versucht","💪",4,"kind"),
     c("s1","schule","15 Minuten Mathe geübt","🔢",3,"kind"),
     c("s2","schule","15 Minuten Deutsch geübt","🔤",3,"kind"),
-    c("s3","schule","Gelesen","📖",2,"kind"),
     c("s4","schule","Hausaufgaben ohne Erinnerung angefangen","⏱️",3,"kind"),
-    c("s5","schule","Etwas Schwieriges nochmal versucht","💪",4,"kind"),
     c("s6","schule","Jemandem etwas erklärt oder vorgelesen","🗣️",3,"kind"),
+    c("s3","schule","Gelesen","📖",2,"kind"),
     c("s7","schule","Gemalt oder gebastelt","🎨",2,"kind"),
     // Essen — Verhalten und Probieren, nie Mengen. Siehe kategorien_vorschlag.md
     c("e2","essen","Beim Kochen oder Vorbereiten geholfen","👨‍🍳",3,"kind"),
@@ -447,7 +449,7 @@ function laden(){
    Ohne das würde ein Gerät, auf dem die App schon lief, weder Ergänzungen noch
    geänderte Formulierungen je sehen — der Katalog wird beim ersten Start gespeichert.
    KAT_VERSION bei jeder Änderung am Standardkatalog erhöhen. */
-const KAT_VERSION=8;
+const KAT_VERSION=9;
 /* Vom Vater entfernte Standardkategorien. Bereits vergebene Punkte bleiben erhalten —
    sie hängen am Protokolleintrag, nicht an der Kategorie. */
 const ENTFERNT=["e1"];
@@ -726,7 +728,13 @@ function renderArea(){
     });
   }
 
-  $("catList").innerHTML=DB.kategorien.filter(c=>c.bereich===bereich&&!c.graduiert&&(!c.nurFuer||c.nurFuer===kind)).map(c=>
+  /* Beim Anzeigen nach Punkten sortieren, nicht nur beim Aktualisieren des Katalogs.
+     Sonst steht ein im Elternbereich geänderter Wert mitten in einem anderen Block —
+     für ein Kind, das die Liste von oben nach unten liest, sieht das nach Willkür aus.
+     Array.sort ist stabil, die Katalogreihenfolge bleibt innerhalb gleicher Werte erhalten. */
+  $("catList").innerHTML=DB.kategorien
+    .filter(c=>c.bereich===bereich&&!c.graduiert&&(!c.nurFuer||c.nurFuer===kind))
+    .slice().sort((a,b)=>b.punkte-a.punkte).map(c=>
     `<button class="cat" data-cat="${c.id}">
       <span class="ico">${c.ico}</span><span class="tx">${esc(c.text)}</span><span class="pt">+${c.punkte}</span>
     </button>`).join("") || `<div class="empty">Hier gibt es gerade nichts.</div>`;
