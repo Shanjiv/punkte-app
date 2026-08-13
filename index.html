@@ -337,7 +337,7 @@ input[type=file]{font-size:14px;width:100%}
 "use strict";
 /* Beim Ändern der App mitziehen. Steht im Elternbereich unter "Stand" und ist der
    schnellste Weg zu erkennen, ob ein Gerät wirklich die neue Fassung geladen hat. */
-const FASSUNG="2026-08-06 c";
+const FASSUNG="2026-08-06 d";
 const KEY="punkte_v1";
 const KEY_ALT="kickers_punkte_v1";   // Schlüssel der ersten Fassung, wird einmalig übernommen
 const $=id=>document.getElementById(id);
@@ -539,6 +539,29 @@ function vergib(katId,punkte,extra){
   sichern();
   const z=zielVon(k);
   toast(z && k.punkte>=z.schwelle ? "Ziel erreicht! 🎉" : "+"+punkte);
+}
+
+/* ---------- Punkte abziehen ----------
+   Entscheidung des Vaters vom 2026-08-06, gegen die urspruengliche Festlegung
+   "kein Abzug, nie" (Philosophie P12). Einwand dokumentiert in
+   10_trainer/philosophie_pruefung.md.
+
+   Drei Konstruktionsentscheidungen, die den Eingriff begrenzen:
+   1. "insgesamt gesammelt" sinkt NICHT. Was verdient wurde, bleibt verdient;
+      abgezogen wird nur vom aktuellen Stand.
+   2. Jeder Abzug landet mit Zeitstempel im Protokoll. Ein haeufiger Abzug ist
+      eine Information ueber das System, nicht nur ueber das Kind.
+   3. Nie unter null. Schulden kann ein Punktesystem nicht sinnvoll abbilden. */
+function abziehen(kid,betrag,grund){
+  const k=DB.kinder[kid];
+  const echt=Math.min(betrag,k.punkte);          // nie unter null
+  if(echt<=0){ toast("Es sind keine Punkte da"); return false; }
+  k.punkte-=echt;                                 // gesamt bleibt bewusst stehen
+  k.log.push({id:"e"+Date.now()+Math.floor(performance.now()%1000),kat:"abzug",
+              bereich:"eltern",punkte:-echt,grund:grund||"",
+              ts:new Date().toISOString(),tag:heute()});
+  sichern();
+  return echt;
 }
 
 /* ================= START ================= */
@@ -866,6 +889,27 @@ function renderParent(){
   ${grads.length?`<div class="grad">🎓 Läuft seit vier Wochen zuverlässig: ${grads.map(g=>esc(g.c.text)+" ("+esc(DB.kinder[g.id].name)+")").join(", ")}.
     Vorschlag: aus der Punkteliste nehmen — die Gewohnheit trägt sich selbst.</div>`:""}
 
+  ${kids.length?`<div class="card">
+    <h3>Punkte abziehen</h3>
+    <div class="note" style="margin-bottom:12px">Nur hier im Elternbereich. <strong>Der Wert „insgesamt gesammelt" sinkt nicht</strong> —
+    was verdient wurde, bleibt verdient. Jeder Abzug wird mit Datum protokolliert und oben unter <em>Stand</em> mitgezählt.</div>
+    ${kids.map(i=>{const k=DB.kinder[i];
+      return `<div class="kw">
+        <span class="avatar sm" style="background:${esc(k.farbe)}">${esc((k.name||"?")[0])}</span>
+        <div class="b"><div class="n">${esc(k.name)}</div><div class="m">${k.punkte} Punkte</div></div>
+        <button class="pill sm" data-ab="${i}|10">−10</button>
+        <button class="pill sm" data-ab="${i}|50">−50</button>
+        <button class="pill sm" data-ab="${i}|alle">alle</button>
+      </div>`;}).join("")}
+    <label for="abKid">Anderer Betrag — für wen</label>
+    <select id="abKid">${kids.map(i=>`<option value="${i}">${esc(DB.kinder[i].name)}</option>`).join("")}</select>
+    <label for="abWie">Wie viele Punkte</label>
+    <input type="number" id="abWie" value="5" min="1" inputmode="numeric">
+    <label for="abGrund">Grund (optional, sieht nur du)</label>
+    <input type="text" id="abGrund" placeholder="z. B. Training abgebrochen" autocomplete="off">
+    <div class="row"><button class="btn" id="abLos">Abziehen</button></div>
+  </div>`:""}
+
   <div class="card">
     <h3>Kinder</h3>
     <div class="note" style="margin-bottom:10px">Name, Geburtsdatum und Farbe stehen nur auf
@@ -929,7 +973,9 @@ function renderParent(){
   <div class="card">
     <h3>Stand</h3>
     ${kids.map(i=>{const k=DB.kinder[i];
-      return `<div class="note" style="margin-bottom:8px"><strong>${esc(k.name)}</strong> — ${k.punkte} Punkte, insgesamt ${k.gesamt}, ${k.log.length} Einträge, ${k.eingeloest.length} eingelöst</div>`;
+      const ab=k.log.filter(e=>e.kat==="abzug");
+      const abS=ab.reduce((n,e)=>n-e.punkte,0);
+      return `<div class="note" style="margin-bottom:8px"><strong>${esc(k.name)}</strong> — ${k.punkte} Punkte, insgesamt ${k.gesamt}, ${k.log.length} Einträge, ${k.eingeloest.length} eingelöst${ab.length?`<br>abgezogen: ${abS} Punkte in ${ab.length} ${ab.length===1?"Fall":"Fällen"}`:""}</div>`;
     }).join("")}
     <div class="hr"></div>
     <div class="row">
@@ -950,6 +996,23 @@ function renderParent(){
   </div>`;
 
   renderKats();
+
+  /* ---- Punkte abziehen ---- */
+  const abFrage=(kid,betrag,grund)=>{
+    const k=DB.kinder[kid], echt=Math.min(betrag,k.punkte);
+    if(echt<=0) return toast(k.name+" hat keine Punkte");
+    if(!confirm(`${k.name}: ${echt} Punkte abziehen?\n\n${k.punkte} → ${k.punkte-echt} Punkte.\n„Insgesamt gesammelt" bleibt bei ${k.gesamt}.`)) return;
+    abziehen(kid,echt,grund);
+    renderStart(); renderParent(); toast("−"+echt);
+  };
+  document.querySelectorAll("[data-ab]").forEach(b=>b.onclick=()=>{
+    const [kid,wie]=b.dataset.ab.split("|");
+    abFrage(kid, wie==="alle"?DB.kinder[kid].punkte:+wie, "");
+  });
+  if($("abLos")) $("abLos").onclick=()=>{
+    const n=Math.max(1,+$("abWie").value||0);
+    abFrage($("abKid").value, n, $("abGrund").value.trim());
+  };
 
   /* ---- Camp-Kategorien in einem Tipp zuordnen und aktivieren ---- */
   document.querySelectorAll("[data-camp]").forEach(b=>b.onclick=()=>{
